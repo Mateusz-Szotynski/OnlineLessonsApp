@@ -1,0 +1,263 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > UserServiceImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">pl.pankalkulator.UserManagment.impl</a>
+</div>
+
+<h1>Coverage Summary for Class: UserServiceImpl (pl.pankalkulator.UserManagment.impl)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">UserServiceImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    33.3%
+  </span>
+  <span class="absValue">
+    (5/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (3/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    40%
+  </span>
+  <span class="absValue">
+    (18/45)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package pl.pankalkulator.UserManagment.impl;
+&nbsp;
+&nbsp;import org.springframework.security.access.prepost.PreAuthorize;
+&nbsp;import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+&nbsp;import org.springframework.security.crypto.password.PasswordEncoder;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import pl.pankalkulator.Exceptions.UserManagmentException;
+&nbsp;import pl.pankalkulator.UserManagment.UserModel;
+&nbsp;import pl.pankalkulator.UserManagment.UserRepository;
+&nbsp;import pl.pankalkulator.UserManagment.UserService;
+&nbsp;import pl.pankalkulator.UserManagment.dto.UserLoginDto;
+&nbsp;import pl.pankalkulator.UserManagment.dto.UserMapper;
+&nbsp;import pl.pankalkulator.UserManagment.dto.UserRegistrationDto;
+&nbsp;import pl.pankalkulator.UserManagment.enums.UserType;
+&nbsp;
+&nbsp;import java.util.UUID;
+&nbsp;
+&nbsp;@Service
+&nbsp;public class UserServiceImpl implements UserService {
+&nbsp;
+&nbsp;    private final UserRepository userRepository;
+&nbsp;
+&nbsp;    private final PasswordEncoder bCryptPasswordEncoder;
+&nbsp;
+&nbsp;    private final UserMapper userMapper;
+&nbsp;
+<b class="fc">&nbsp;    public UserServiceImpl(UserRepository userRepository, PasswordEncoder bCryptPasswordEncoder, UserMapper userMapper) {</b>
+<b class="fc">&nbsp;        this.userRepository = userRepository;</b>
+<b class="fc">&nbsp;        this.bCryptPasswordEncoder = bCryptPasswordEncoder;</b>
+<b class="fc">&nbsp;        this.userMapper = userMapper;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public UserModel registerUser(UserRegistrationDto userRegistrationDto) {
+<b class="fc">&nbsp;        UserModel user = userMapper.toUserModel(userRegistrationDto);</b>
+&nbsp;
+<b class="fc">&nbsp;        var userFromDb = userRepository.findByEmail(userRegistrationDto.getEmail());</b>
+&nbsp;
+&nbsp;        // Sprawdź czy użytkownik o podanym adresie email już istnieje
+<b class="fc">&nbsp;        if (userFromDb.isPresent()) {</b>
+<b class="fc">&nbsp;            throw new UserManagmentException(&quot;Użytkownik o podanym adresie email już istnieje&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Ustaw hasło użytkownika (haszowane)
+<b class="fc">&nbsp;        user.setPassword(bCryptPasswordEncoder.encode(userRegistrationDto.getPassword()));</b>
+&nbsp;
+&nbsp;        // Zapisz użytkownika w bazie danych
+<b class="fc">&nbsp;        return userRepository.save(user);</b>
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public UserModel loginUser(UserLoginDto userLoginDto) {
+&nbsp;
+&nbsp;        // Pobierz użytkownika o podanym adresie email
+<b class="fc">&nbsp;        UserModel userModel = userRepository.findByEmail(userLoginDto.getEmail())</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new UserManagmentException(&quot;Nie znaleziono użytkownika o podanym adresie email&quot;));</b>
+&nbsp;
+&nbsp;        // Sprawdź czy hasło jest poprawne
+<b class="pc">&nbsp;        if (!bCryptPasswordEncoder.matches(userLoginDto.getPassword(), userModel.getPassword())) {</b>
+<b class="nc">&nbsp;            throw new UserManagmentException(&quot;Niepoprawne hasło&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return userModel;</b>
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public UserModel getUserById(String id) {
+<b class="fc">&nbsp;        return userRepository.findById(id)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new UserManagmentException(&quot;Nie znaleziono użytkownika o podanym id &quot; + id));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public UserModel getUserByEmail(String email) {
+<b class="fc">&nbsp;        return userRepository.findByEmail(email)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new UserManagmentException(&quot;Nie znaleziono użytkownika o podanym adresie email &quot; + email));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public UserModel updateUser(UserModel userModel) {
+<b class="nc">&nbsp;        return userRepository.save(userModel);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void deleteUser(String id) {
+<b class="nc">&nbsp;        userRepository.deleteById(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @PreAuthorize(&quot;hasRole(&#39;ADMIN&#39;)&quot;)
+&nbsp;    public void changeUserType(String id, UserType userType) {
+<b class="nc">&nbsp;        UserModel userModel = getUserById(id);</b>
+<b class="nc">&nbsp;        userModel.setUserType(userType);</b>
+<b class="nc">&nbsp;        userRepository.save(userModel);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void changeUserPassword(String id, String password) {
+<b class="nc">&nbsp;        UserModel userModel = getUserById(id);</b>
+<b class="nc">&nbsp;        userModel.setPassword(bCryptPasswordEncoder.encode(password));</b>
+<b class="nc">&nbsp;        userRepository.save(userModel);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void changeUserPhoto(String id, String photo) {
+<b class="nc">&nbsp;        UserModel userModel = getUserById(id);</b>
+<b class="nc">&nbsp;        userModel.setPhoto(photo);</b>
+<b class="nc">&nbsp;        userRepository.save(userModel);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void changeUserBiography(String id, String biography) {
+<b class="nc">&nbsp;        UserModel userModel = getUserById(id);</b>
+<b class="nc">&nbsp;        userModel.setBiography(biography);</b>
+<b class="nc">&nbsp;        userRepository.save(userModel);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void changeUserEmail(String id, String email) {
+<b class="nc">&nbsp;        UserModel userModel = getUserById(id);</b>
+<b class="nc">&nbsp;        userModel.setEmail(email);</b>
+<b class="nc">&nbsp;        userRepository.save(userModel);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void changeUserFirstName(String id, String firstName) {
+<b class="nc">&nbsp;        UserModel userModel = getUserById(id);</b>
+<b class="nc">&nbsp;        userModel.setFirstName(firstName);</b>
+<b class="nc">&nbsp;        userRepository.save(userModel);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void changeUserLastName(String id, String lastName) {
+<b class="nc">&nbsp;        UserModel userModel = getUserById(id);</b>
+<b class="nc">&nbsp;        userModel.setLastName(lastName);</b>
+<b class="nc">&nbsp;        userRepository.save(userModel);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void resetPassword(String email) {
+<b class="nc">&nbsp;        UserModel userModel = getUserByEmail(email);</b>
+<b class="nc">&nbsp;        userModel.setPassword(bCryptPasswordEncoder.encode(UUID.randomUUID().toString().substring(0, 10)));</b>
+<b class="nc">&nbsp;        userRepository.save(userModel);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-09-17 16:21</div>
+</div>
+</body>
+</html>
